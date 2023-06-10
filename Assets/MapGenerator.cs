@@ -37,11 +37,12 @@ public class MapGenerator : MonoBehaviour
 
     public void GenerateMap() {
         // generate the tiles from right to left due to overlapping
-        float ratio = 2.95f/2f;
+        float ratio = 1.5f;
+        float scale = 0.6f;
         for (int i = sizeX - 1; i >= 0; --i) {
             for (int j = 0; j < sizeY; ++j) {
-                float xOffset = (i + j) / ratio - sizeX/2;
-                float yOffset = (i - j) / (ratio * ratio);
+                float xOffset = (i + j) * scale;
+                float yOffset = ((i - j) / ratio) * scale;
                 if (isLandTile(i, j)) {
                     GameObject tile = Instantiate(landSprite, new Vector3(xOffset, yOffset, 0), Quaternion.identity);
                 }
