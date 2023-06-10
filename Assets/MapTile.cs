@@ -14,7 +14,7 @@ public class MapTile : MonoBehaviour
     public SpriteRenderer spriteRenderer;
     public Sprite landSprite;
     public Sprite waterSprite;
-
+    
     // Start is called before the first frame update
     void Start()
     {
