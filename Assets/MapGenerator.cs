@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using System.Collections.Specialized;
 using System.Linq;
+using System;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class MapGenerator : MonoBehaviour
     public MapTile playerTile;
     public MapTile opponentTile;
     public MapTile bridgeTile;
+
+    public Vector2 defaultTileSize;
 
     public List<List<MapTile>> mapTileList;
     public static int sizeX = 16;
@@ -22,6 +25,9 @@ public class MapGenerator : MonoBehaviour
     public GameObject waterSprite;
     public GameObject tileSprite;
 
+
+    public GameObject colliderParent;
+    public Dictionary<Tuple<int, int>, GameObject> colliderMap = new Dictionary<Tuple<int, int>, GameObject>();
 
     HashSet<int> arrayIndices;
     private bool[,] visited = new bool[sizeX, sizeY];
@@ -39,6 +45,7 @@ public class MapGenerator : MonoBehaviour
             }
             arrayIndices.Add(newIndex);
         }
+        // Substitute two of the tiles for the player and opponent tiles
         playerIndex = arrayIndices.ElementAt(UnityEngine.Random.Range(0, arrayIndices.Count));
         arrayIndices.Remove(playerIndex);
         opponentIndex = arrayIndices.ElementAt(UnityEngine.Random.Range(0, arrayIndices.Count));
@@ -72,8 +79,27 @@ public class MapGenerator : MonoBehaviour
         if (i < 0 || j < 0 || i >= sizeX || j >= sizeY)
             return;
 
-        if (visited[i, j] || !isLandTile(i, j))
+        if (visited[i, j])
+        {
             return;
+        }
+        if (!isLandTile(i, j))
+        {
+            GameObject colliderObject = new GameObject();
+            colliderObject.transform.parent = colliderParent.transform;
+
+            BoxCollider2D collider = colliderObject.AddComponent<BoxCollider2D>();
+
+            Tuple<float, float> offsets = gridToPixel(i, j);
+            colliderObject.transform.position = new Vector3(offsets.Item1, offsets.Item2, 0);
+            collider.size = defaultTileSize;
+            Tuple<int, int> position = Tuple.Create(i, j);
+            if (!colliderMap.ContainsKey(position))
+            {
+                colliderMap.Add(position, colliderObject);
+            }
+            return;
+        }
 
         visited[i, j] = true;
 
@@ -85,37 +111,41 @@ public class MapGenerator : MonoBehaviour
         DFS(i, j - 1, island);
     }
 
+    Tuple<float, float> gridToPixel(int i, int j)
+    {
+        float ratio = 1.5f;
+        float scale = 0.6f;
+        return Tuple.Create((i + j) * scale, ((j - i) / ratio) * scale);
+    }
 
     public void GenerateMap() {
         // generate the tiles from right to left due to overlapping
-        float ratio = 1.5f;
-        float scale = 0.6f;
         for (int i = sizeX - 1; i >= 0; --i) {
             for (int j = 0; j < sizeY; ++j) {
-                float xOffset = (i + j) * scale;
-                float yOffset = ((j - i) / ratio) * scale;
+                Tuple<float, float> tileOffsets = gridToPixel(i, j);
                 if (isLandTile(i, j)) {
-                    mapTileList[i].Add(Instantiate(defaultTile, new Vector3(xOffset, yOffset, 0), Quaternion.identity));
+                    mapTileList[i].Add(Instantiate(defaultTile, 
+                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity));
                 }
             }
         }
         // add the player and opponent tiles at the end
         int playerI = playerIndex / sizeX;
         int playerJ = playerIndex % sizeX;
-        float playerXOffset = (playerI + playerJ) * scale;
-        float playerYOffset = (playerJ - playerI) / ratio * scale;
-        Instantiate(playerTile, new Vector3(playerXOffset, playerYOffset, 0), Quaternion.identity);
+        Tuple<float, float> offsets = gridToPixel(playerI, playerJ);
+        Instantiate(playerTile, new Vector3(offsets.Item1, offsets.Item2, 0), Quaternion.identity);
 
         int opponentI = opponentIndex / sizeX;
         int opponentJ = opponentIndex % sizeX;
-        float opponentXOffset = (opponentI + opponentJ) * scale;
-        float opponentYOffset = (opponentJ - opponentI) / ratio * scale;
-        Instantiate(opponentTile, new Vector3(opponentXOffset, opponentYOffset, 0), Quaternion.identity);
+        offsets = gridToPixel(opponentI, opponentJ);
+        Instantiate(opponentTile, new Vector3(offsets.Item1, offsets.Item2, 0), Quaternion.identity);
     }
 
     // Start is called before the first frame update
     void Start() {
         GenerateLandTiles();
+        defaultTileSize = defaultTile.GetComponent<SpriteRenderer>().bounds.size;
+        colliderParent = new GameObject();
         List<List<(int, int)>> islands = FindIslands();
 
         mapTileList = new List<List<MapTile>>();
