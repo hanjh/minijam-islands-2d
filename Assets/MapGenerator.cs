@@ -8,6 +8,7 @@ using System;
 public class MapGenerator : MonoBehaviour
 {
     public MapTile defaultTile;
+    public MapTile waterTile;
     public MapTile playerTile;
     public MapTile opponentTile;
     public MapTile bridgeTile;
@@ -33,7 +34,7 @@ public class MapGenerator : MonoBehaviour
     public GameObject colliderParent;
     public Dictionary<Tuple<int, int>, GameObject> colliderMap = new Dictionary<Tuple<int, int>, GameObject>();
 
-    public List<BoxCollider2D> collidersToVisualize = new List<BoxCollider2D>();
+    public List<PolygonCollider2D> collidersToVisualize = new List<PolygonCollider2D>();
     private List<LineRenderer> lineRenderers = new List<LineRenderer>();
 
     private void OnDrawGizmos()
@@ -96,21 +97,21 @@ public class MapGenerator : MonoBehaviour
         }
         if (!isLandTile(i, j))
         {
-            GameObject colliderObject = new GameObject();
-            colliderObject.transform.parent = colliderParent.transform;
+            // GameObject colliderObject = new GameObject();
+            // colliderObject.transform.parent = colliderParent.transform;
 
-            BoxCollider2D collider = colliderObject.AddComponent<BoxCollider2D>();
+            // PolygonCollider2D collider = colliderObject.AddComponent<PolygonCollider2D>();
 
-            Tuple<float, float> offsets = gridToPixel(i, j);
-            colliderObject.transform.position = new Vector3(offsets.Item1, offsets.Item2, 0);
-            collider.size = defaultTileSize;
+            // // Tuple<float, float> offsets = gridToPixel(i, j);
+            // // colliderObject.transform.position = new Vector3(offsets.Item1, offsets.Item2, 0);
+            // // collider.size = defaultTileSize;
 
-            Tuple<int, int> position = Tuple.Create(i, j);
-            if (!colliderMap.ContainsKey(position))
-            {
-                colliderMap.Add(position, colliderObject);
-            }
-            collidersToVisualize.Add(collider);
+            // Tuple<int, int> position = Tuple.Create(i, j);
+            // if (!colliderMap.ContainsKey(position))
+            // {
+            //     colliderMap.Add(position, colliderObject);
+            // }
+            // collidersToVisualize.Add(collider);
 
             return;
         }
@@ -134,12 +135,17 @@ public class MapGenerator : MonoBehaviour
 
     public void GenerateMap() {
         // generate the tiles from right to left due to overlapping
-        for (int i = sizeX - 1; i >= 0; --i) {
-            for (int j = 0; j < sizeY; ++j) {
+        for (int i = 0; i < sizeX; ++i) {
+            for (int j = sizeY - 1; j >= 0; --j) {
                 Tuple<float, float> tileOffsets = gridToPixel(i, j);
                 if (isLandTile(i, j)) {
-                    mapTileList[i].Add(Instantiate(defaultTile, 
-                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity));
+                    MapTile newTile = Instantiate(defaultTile, 
+                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
+                    mapTileList[i].Add(newTile);
+                    // collidersToVisualize.Add(newTile.GetComponent<PolygonCollider2D>());
+                } else {
+                    Instantiate(waterTile, 
+                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
                 }
             }
         }
@@ -188,7 +194,7 @@ void Start() {
             mapTileList.Add(new List<MapTile>());
         }
         GenerateMap();
-        CreateLineRenderers();
+        // CreateLineRenderers();
     }
 
     // Update is called once per frame
