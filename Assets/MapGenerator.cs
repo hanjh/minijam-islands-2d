@@ -12,6 +12,8 @@ public class MapGenerator : MonoBehaviour
     public MapTile opponentTile;
     public MapTile bridgeTile;
 
+    public Sprite colliderVisual;
+
     public Vector2 defaultTileSize;
 
     public List<List<MapTile>> mapTileList;
@@ -25,12 +27,21 @@ public class MapGenerator : MonoBehaviour
     public GameObject waterSprite;
     public GameObject tileSprite;
 
+    HashSet<int> arrayIndices;
+    private bool[,] visited = new bool[sizeX, sizeY];
 
     public GameObject colliderParent;
     public Dictionary<Tuple<int, int>, GameObject> colliderMap = new Dictionary<Tuple<int, int>, GameObject>();
 
-    HashSet<int> arrayIndices;
-    private bool[,] visited = new bool[sizeX, sizeY];
+    public List<BoxCollider2D> collidersToVisualize = new List<BoxCollider2D>();
+    private List<LineRenderer> lineRenderers = new List<LineRenderer>();
+
+    private void OnDrawGizmos()
+    {
+        Vector3 cubePosition = new Vector3(8f, -2f, 0f);
+        Gizmos.color = Color.green;
+        Gizmos.DrawCube(cubePosition, Vector3.one);
+    }
 
     public void GenerateLandTiles() {
         int lowerBound = (sizeX * sizeY) / 4;
@@ -93,11 +104,14 @@ public class MapGenerator : MonoBehaviour
             Tuple<float, float> offsets = gridToPixel(i, j);
             colliderObject.transform.position = new Vector3(offsets.Item1, offsets.Item2, 0);
             collider.size = defaultTileSize;
+
             Tuple<int, int> position = Tuple.Create(i, j);
             if (!colliderMap.ContainsKey(position))
             {
                 colliderMap.Add(position, colliderObject);
             }
+            collidersToVisualize.Add(collider);
+
             return;
         }
 
@@ -141,8 +155,28 @@ public class MapGenerator : MonoBehaviour
         Instantiate(opponentTile, new Vector3(offsets.Item1, offsets.Item2, 0), Quaternion.identity);
     }
 
-    // Start is called before the first frame update
-    void Start() {
+    void CreateLineRenderers()
+    {
+        for (int i = 0; i < collidersToVisualize.Count; i++)
+        {
+            GameObject lineRendererObject = new GameObject("LineRenderer");
+            lineRendererObject.transform.SetParent(transform);
+
+            LineRenderer lineRenderer = lineRendererObject.AddComponent<LineRenderer>();
+            lineRenderer.positionCount = 5;
+            lineRenderer.useWorldSpace = true;
+            lineRenderer.startWidth = 0.05f;
+            lineRenderer.endWidth = 0.05f;
+            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            lineRenderer.startColor = Color.red;
+            lineRenderer.endColor = Color.red;
+
+            lineRenderers.Add(lineRenderer);
+        }
+    }
+
+// Start is called before the first frame update
+void Start() {
         GenerateLandTiles();
         defaultTileSize = defaultTile.GetComponent<SpriteRenderer>().bounds.size;
         colliderParent = new GameObject();
@@ -154,10 +188,25 @@ public class MapGenerator : MonoBehaviour
             mapTileList.Add(new List<MapTile>());
         }
         GenerateMap();
+        CreateLineRenderers();
     }
 
     // Update is called once per frame
     void Update() {
+        for (int i = 0; i < collidersToVisualize.Count; i++)
+        {
+            if (collidersToVisualize[i] != null)
+            {
+                Vector2 min = collidersToVisualize[i].bounds.min;
+                Vector2 max = collidersToVisualize[i].bounds.max;
+
+                lineRenderers[i].SetPosition(0, new Vector3(min.x, min.y, 0f));
+                lineRenderers[i].SetPosition(1, new Vector3(max.x, min.y, 0f));
+                lineRenderers[i].SetPosition(2, new Vector3(max.x, max.y, 0f));
+                lineRenderers[i].SetPosition(3, new Vector3(min.x, max.y, 0f));
+                lineRenderers[i].SetPosition(4, new Vector3(min.x, min.y, 0f));
+            }
+        }
 
     }
 }
