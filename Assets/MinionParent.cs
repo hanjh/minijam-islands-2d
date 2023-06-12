@@ -23,7 +23,10 @@ public class MinionParent : MonoBehaviour
     public void MoveToTarget(GameObject newMinion) {
         Debug.Log("Moving to target");
         Vector3 endPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition) + offset;
-        newMinion.GetComponent<Minion>().endPosition = endPosition;
+        Debug.DrawLine(endPosition, newMinion.transform.position, Color.red, 5, false);
+        Vector2Int gridEndPosition = ScreenPositionToGridPosition(endPosition);
+        Vector2 pixelEndPosition = mapGenerator.gridToPixel(gridEndPosition.x, gridEndPosition.y);
+        newMinion.GetComponent<Minion>().endPosition = pixelEndPosition;
         newMinion.GetComponent<Minion>().isMoving = true;
     }
 

@@ -6,8 +6,9 @@ public class Minion : MonoBehaviour
 {
     private float speed = 2.0f;
     public bool isMoving = false;
-    public Vector3 endPosition;
+    public Vector2 endPosition;
     MapGenerator mapGenerator;
+    Rigidbody2D m_Rigidbody;
 
     public enum Intent {
         Idle,
@@ -24,17 +25,24 @@ public class Minion : MonoBehaviour
     void Start()
     {
         mapGenerator = FindObjectOfType<MapGenerator>();
+        m_Rigidbody = GetComponent<Rigidbody2D>();
+    }
+
+    void FixedUpdate()
+    {
+        if (isMoving) {
+            var step =  speed * Time.deltaTime; // calculate distance to move
+            // transform.position = Vector3.MoveTowards(transform.position, endPosition, step);
+            Vector2 direction = (endPosition - (Vector2) transform.position).normalized;
+            m_Rigidbody.MovePosition((Vector2) transform.position + direction * step);
+            // Debug.DrawLine(transform.position, endPosition, Color.red, 2.5f, false);
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (isMoving) {
-            var step =  speed * Time.deltaTime; // calculate distance to move
-            transform.position = Vector3.MoveTowards(transform.position, endPosition, step);
-        }
-
-        if (Vector3.Distance(transform.position, endPosition) < 0.001f)
+        if (Vector3.Distance(transform.position, endPosition) < 0.5f)
         {
             transform.position = endPosition;
             isMoving = false;
@@ -60,5 +68,10 @@ public class Minion : MonoBehaviour
             intent = Intent.Idle;
             Destroy(gameObject);
         }
+    }
+
+    void OnTriggerEnter2D(Collider2D col)
+    {
+        Debug.Log("GameObject1 collided with " + col.name);
     }
 }
