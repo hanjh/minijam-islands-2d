@@ -93,11 +93,20 @@ public class MapGenerator : MonoBehaviour
         DFS(i, j - 1, island);
     }
 
-    Tuple<float, float> gridToPixel(int i, int j)
-    {
+    Tuple<float, float> gridToPixel(int i, int j) {
         float ratio = 1.5f;
         float scale = 0.6f;
         return Tuple.Create((i + j) * scale, ((j - i) / ratio) * scale);
+    }
+
+    Tuple<int, int> pixelToGrid(float x, float y) {
+        float ratio = 1.5f;
+        float scale = 0.6f;
+
+        int i = (int)Math.Round((x / scale) - (y / (ratio * scale)));
+        int j = (int)Math.Round((x / scale) + (y / (ratio * scale)));
+
+        return Tuple.Create(i, j);
     }
 
     bool isPlayerTile(int i, int j)
@@ -119,21 +128,21 @@ public class MapGenerator : MonoBehaviour
         for (int i = 0; i < sizeX; ++i) {
             for (int j = sizeY - 1; j >= 0; --j) {
                 Tuple<float, float> tileOffsets = gridToPixel(i, j);
+                MapTile currentTile = defaultTile;
                 if (isPlayerTile(i, j)) {
-                    Instantiate(playerTile,
-                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
+                    currentTile = playerTile;
                 } else if (isOpponentTile(i, j)) {
-                    Instantiate(opponentTile,
-                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
-
+                    currentTile = opponentTile;
                 } else if (isLandTile(i, j)) {
-                    MapTile newTile = Instantiate(defaultTile, 
-                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
-                    mapTileList[i].Add(newTile);
+                    currentTile = defaultTile;
                 } else {
-                    Instantiate(waterTile, 
-                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
+                    currentTile = waterTile;
                 }
+                MapTile newTile = Instantiate(currentTile,
+                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
+                newTile.gridPosition.x = i;
+                newTile.gridPosition.y = j;
+                mapTileList[i].Add(newTile);
             }
         }
     }

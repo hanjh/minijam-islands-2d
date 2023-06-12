@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MinionPathing : MonoBehaviour
+public class Minion : MonoBehaviour
 {
     private float speed = 2.0f;
     public bool isMoving = false;

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Resources;
@@ -19,6 +20,8 @@ public class MapTile : MonoBehaviour
         Opponent,
         Neutral,
     }
+
+    public Vector2Int gridPosition = new Vector2Int(0, 0);
 
     public TileOwner owner = TileOwner.Neutral;
 
