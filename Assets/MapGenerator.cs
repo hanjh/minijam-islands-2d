@@ -109,15 +109,13 @@ public class MapGenerator : MonoBehaviour
         return Tuple.Create(i, j);
     }
 
-    bool isPlayerTile(int i, int j)
-    {
+    bool isPlayerTile(int i, int j) {
         int playerI = playerIndex / sizeX;
         int playerJ = playerIndex % sizeX;
         return i == playerI && j == playerJ;
     }
 
-    bool isOpponentTile(int i, int j)
-    {
+    bool isOpponentTile(int i, int j) {
         int opponentI = opponentIndex / sizeX;
         int opponentJ = opponentIndex % sizeX;
         return i == opponentI && j == opponentJ;

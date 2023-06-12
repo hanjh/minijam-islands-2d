@@ -12,8 +12,7 @@ public class MinionParent : MonoBehaviour
 
     public void handleMouseDown() {
         Debug.Log("mouse button down, position: " + Input.mousePosition);
-        int x = Input.mousePosition.x;
-        int y = Input.mousePosition.y;
+        Vector2 position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
 
         RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
         Debug.Log(hit.collider.gameObject.name);
