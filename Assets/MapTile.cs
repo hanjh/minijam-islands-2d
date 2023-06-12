@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Resources;
 using UnityEngine;
 
+
 public class MapTile : MonoBehaviour
 {
     public enum TileType
@@ -12,14 +13,14 @@ public class MapTile : MonoBehaviour
         Bridge,
     }
 
-    public enum Owner
+    public enum TileOwner
     {
         Player,
         Opponent,
         Neutral,
     }
 
-    public TileOwner = Neutral;
+    public TileOwner owner = TileOwner.Neutral;
 
     public int strength = 10;
 
@@ -28,18 +29,17 @@ public class MapTile : MonoBehaviour
     public SpriteRenderer spriteRenderer;
     public Sprite tileSprite;
 
-    public void incrementStrength(MinionGroup group)
+    public void incrementStrength(int minionCount)
     {
-        strength += group.size;
+        strength += minionCount;
     }
 
-    public void decrementStrength(MinionGroup group)
+    public void decrementStrength(int minionCount)
     {
-        if (group.size > strength)
+        if (minionCount > strength)
         {
-            group.size = group.size - strength;
             strength = 0;
-            TileOwner = group.owner;
+            owner = TileOwner.Opponent; // invert for opponent->owner, but this should be based on minion
             // once you take over a tile, what should the default strength be?
         }
     }
