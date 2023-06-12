@@ -31,19 +31,6 @@ public class MapGenerator : MonoBehaviour
     HashSet<int> arrayIndices;
     private bool[,] visited = new bool[sizeX, sizeY];
 
-    public GameObject colliderParent;
-    public Dictionary<Tuple<int, int>, GameObject> colliderMap = new Dictionary<Tuple<int, int>, GameObject>();
-
-    public List<PolygonCollider2D> collidersToVisualize = new List<PolygonCollider2D>();
-    private List<LineRenderer> lineRenderers = new List<LineRenderer>();
-
-    private void OnDrawGizmos()
-    {
-        Vector3 cubePosition = new Vector3(8f, -2f, 0f);
-        Gizmos.color = Color.green;
-        Gizmos.DrawCube(cubePosition, Vector3.one);
-    }
-
     public void GenerateLandTiles() {
         int lowerBound = (sizeX * sizeY) / 4;
         int upperBound = (sizeX * sizeY) / 3;
@@ -91,28 +78,8 @@ public class MapGenerator : MonoBehaviour
         if (i < 0 || j < 0 || i >= sizeX || j >= sizeY)
             return;
 
-        if (visited[i, j])
+        if (visited[i, j] || !isLandTile(i ,j))
         {
-            return;
-        }
-        if (!isLandTile(i, j))
-        {
-            // GameObject colliderObject = new GameObject();
-            // colliderObject.transform.parent = colliderParent.transform;
-
-            // PolygonCollider2D collider = colliderObject.AddComponent<PolygonCollider2D>();
-
-            // // Tuple<float, float> offsets = gridToPixel(i, j);
-            // // colliderObject.transform.position = new Vector3(offsets.Item1, offsets.Item2, 0);
-            // // collider.size = defaultTileSize;
-
-            // Tuple<int, int> position = Tuple.Create(i, j);
-            // if (!colliderMap.ContainsKey(position))
-            // {
-            //     colliderMap.Add(position, colliderObject);
-            // }
-            // collidersToVisualize.Add(collider);
-
             return;
         }
 
@@ -133,51 +100,41 @@ public class MapGenerator : MonoBehaviour
         return Tuple.Create((i + j) * scale, ((j - i) / ratio) * scale);
     }
 
+    bool isPlayerTile(int i, int j)
+    {
+        int playerI = playerIndex / sizeX;
+        int playerJ = playerIndex % sizeX;
+        return i == playerI && j == playerJ;
+    }
+
+    bool isOpponentTile(int i, int j)
+    {
+        int opponentI = opponentIndex / sizeX;
+        int opponentJ = opponentIndex % sizeX;
+        return i == opponentI && j == opponentJ;
+    }
+
     public void GenerateMap() {
         // generate the tiles from right to left due to overlapping
         for (int i = 0; i < sizeX; ++i) {
             for (int j = sizeY - 1; j >= 0; --j) {
                 Tuple<float, float> tileOffsets = gridToPixel(i, j);
-                if (isLandTile(i, j)) {
+                if (isPlayerTile(i, j)) {
+                    Instantiate(playerTile,
+                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
+                } else if (isOpponentTile(i, j)) {
+                    Instantiate(opponentTile,
+                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
+
+                } else if (isLandTile(i, j)) {
                     MapTile newTile = Instantiate(defaultTile, 
                         new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
                     mapTileList[i].Add(newTile);
-                    // collidersToVisualize.Add(newTile.GetComponent<PolygonCollider2D>());
                 } else {
                     Instantiate(waterTile, 
                         new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
                 }
             }
-        }
-        // add the player and opponent tiles at the end
-        int playerI = playerIndex / sizeX;
-        int playerJ = playerIndex % sizeX;
-        Tuple<float, float> offsets = gridToPixel(playerI, playerJ);
-        Instantiate(playerTile, new Vector3(offsets.Item1, offsets.Item2, 0), Quaternion.identity);
-
-        int opponentI = opponentIndex / sizeX;
-        int opponentJ = opponentIndex % sizeX;
-        offsets = gridToPixel(opponentI, opponentJ);
-        Instantiate(opponentTile, new Vector3(offsets.Item1, offsets.Item2, 0), Quaternion.identity);
-    }
-
-    void CreateLineRenderers()
-    {
-        for (int i = 0; i < collidersToVisualize.Count; i++)
-        {
-            GameObject lineRendererObject = new GameObject("LineRenderer");
-            lineRendererObject.transform.SetParent(transform);
-
-            LineRenderer lineRenderer = lineRendererObject.AddComponent<LineRenderer>();
-            lineRenderer.positionCount = 5;
-            lineRenderer.useWorldSpace = true;
-            lineRenderer.startWidth = 0.05f;
-            lineRenderer.endWidth = 0.05f;
-            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-            lineRenderer.startColor = Color.red;
-            lineRenderer.endColor = Color.red;
-
-            lineRenderers.Add(lineRenderer);
         }
     }
 
@@ -185,34 +142,17 @@ public class MapGenerator : MonoBehaviour
 void Start() {
         GenerateLandTiles();
         defaultTileSize = defaultTile.GetComponent<SpriteRenderer>().bounds.size;
-        colliderParent = new GameObject();
         List<List<(int, int)>> islands = FindIslands();
-
         mapTileList = new List<List<MapTile>>();
         for (int i = 0; i < sizeX; ++i)
         {
             mapTileList.Add(new List<MapTile>());
         }
         GenerateMap();
-        // CreateLineRenderers();
     }
 
     // Update is called once per frame
     void Update() {
-        for (int i = 0; i < collidersToVisualize.Count; i++)
-        {
-            if (collidersToVisualize[i] != null)
-            {
-                Vector2 min = collidersToVisualize[i].bounds.min;
-                Vector2 max = collidersToVisualize[i].bounds.max;
-
-                lineRenderers[i].SetPosition(0, new Vector3(min.x, min.y, 0f));
-                lineRenderers[i].SetPosition(1, new Vector3(max.x, min.y, 0f));
-                lineRenderers[i].SetPosition(2, new Vector3(max.x, max.y, 0f));
-                lineRenderers[i].SetPosition(3, new Vector3(min.x, max.y, 0f));
-                lineRenderers[i].SetPosition(4, new Vector3(min.x, min.y, 0f));
-            }
-        }
 
     }
 }
