@@ -42,7 +42,7 @@ public class Minion : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Vector3.Distance(transform.position, endPosition) < 0.5f)
+        if (Vector3.Distance(transform.position, endPosition) < 0.6f)
         {
             transform.position = endPosition;
             isMoving = false;
