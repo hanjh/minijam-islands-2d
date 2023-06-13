@@ -28,6 +28,14 @@ public class MapGenerator : MonoBehaviour
     public GameObject waterSprite;
     public GameObject tileSprite;
 
+    // mapgenerator does not have an owner, this is a common type that is shared
+    // between tiles and minions
+    public enum Owner {
+        Player,
+        Opponent,
+        Neutral,
+    }
+
     HashSet<int> arrayIndices;
     private bool[,] visited = new bool[sizeX, sizeY];
 
@@ -93,20 +101,20 @@ public class MapGenerator : MonoBehaviour
         DFS(i, j - 1, island);
     }
 
-    Tuple<float, float> gridToPixel(int i, int j) {
+    public Vector2 gridToPixel(int i, int j) {
         float ratio = 1.5f;
         float scale = 0.6f;
-        return Tuple.Create((i + j) * scale, ((j - i) / ratio) * scale);
+        return new Vector2((i + j) * scale, ((j - i) / ratio) * scale);
     }
 
-    Tuple<int, int> pixelToGrid(float x, float y) {
+    public Vector2Int pixelToGrid(float x, float y) {
         float ratio = 1.5f;
         float scale = 0.6f;
 
-        int i = (int)Math.Round((x / scale) - (y / (ratio * scale)));
-        int j = (int)Math.Round((x / scale) + (y / (ratio * scale)));
+        float i = (x - y * ratio) / (2 * scale);
+        float j = (y * ratio) / scale + (x - y * ratio) / (2 * scale);
 
-        return Tuple.Create(i, j);
+        return new Vector2Int((int)Math.Round(i), (int)Math.Round(j));
     }
 
     bool isPlayerTile(int i, int j) {
@@ -125,7 +133,7 @@ public class MapGenerator : MonoBehaviour
         // generate the tiles from right to left due to overlapping
         for (int i = 0; i < sizeX; ++i) {
             for (int j = sizeY - 1; j >= 0; --j) {
-                Tuple<float, float> tileOffsets = gridToPixel(i, j);
+                Vector2 tileOffsets = gridToPixel(i, j);
                 MapTile currentTile = defaultTile;
                 if (isPlayerTile(i, j)) {
                     currentTile = playerTile;
@@ -137,10 +145,10 @@ public class MapGenerator : MonoBehaviour
                     currentTile = waterTile;
                 }
                 MapTile newTile = Instantiate(currentTile,
-                        new Vector3(tileOffsets.Item1, tileOffsets.Item2, 0), Quaternion.identity);
+                        new Vector3(tileOffsets.x, tileOffsets.y, 0), Quaternion.identity);
                 newTile.gridPosition.x = i;
                 newTile.gridPosition.y = j;
-                mapTileList[i].Add(newTile);
+                mapTileList[i][j] = newTile;
             }
         }
     }
@@ -151,9 +159,13 @@ void Start() {
         defaultTileSize = defaultTile.GetComponent<SpriteRenderer>().bounds.size;
         List<List<(int, int)>> islands = FindIslands();
         mapTileList = new List<List<MapTile>>();
+        // prepopulate the list
         for (int i = 0; i < sizeX; ++i)
         {
             mapTileList.Add(new List<MapTile>());
+            for (int j = 0; j < sizeY; ++j) {
+                mapTileList[i].Add(new MapTile());
+            }
         }
         GenerateMap();
     }

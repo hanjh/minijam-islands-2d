@@ -14,39 +14,52 @@ public class MapTile : MonoBehaviour
         Bridge,
     }
 
-    public enum TileOwner
-    {
-        Player,
-        Opponent,
-        Neutral,
-    }
-
     public Vector2Int gridPosition = new Vector2Int(0, 0);
 
-    public TileOwner owner = TileOwner.Neutral;
+    public MapGenerator.Owner owner = MapGenerator.Owner.Neutral;
 
-    public int strength = 10;
+    public int strength = 2;
+
+    public int bridgeCost = 1;
+    // what if two people build a bridge at once?
 
     public TileType type;
 
     public SpriteRenderer spriteRenderer;
     public Sprite tileSprite;
 
-    public void incrementStrength(int minionCount)
+    public bool readyToDestroy = false;
+
+    public void incrementStrength()
     {
-        strength += minionCount;
+        strength++;
     }
 
-    public void decrementStrength(int minionCount)
+    public void decrementStrength(MapGenerator.Owner attackingOwner)
     {
-        if (minionCount > strength)
-        {
-            strength = 0;
-            owner = TileOwner.Opponent; // invert for opponent->owner, but this should be based on minion
-            // once you take over a tile, what should the default strength be?
+        strength--;
+        if (strength == 0) {
+            owner = attackingOwner;
+            Debug.Log("changing owner for tile " + gridPosition);
+            // apply appropriate color transforms
+            if (owner == MapGenerator.Owner.Player) {
+                spriteRenderer.color = Color.blue;
+            } else {
+                spriteRenderer.color = Color.red;
+            }
         }
     }
     
+    public bool buildBridge(MapGenerator.Owner buildingOwner) {
+        bridgeCost--;
+        if (bridgeCost == 0) {
+            readyToDestroy = true;
+            return true;
+        }
+        return false;
+
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -56,5 +69,8 @@ public class MapTile : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (readyToDestroy) {
+            Destroy(gameObject);
+        }
     }
 }
