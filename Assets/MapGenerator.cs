@@ -160,11 +160,10 @@ void Start() {
         List<List<(int, int)>> islands = FindIslands();
         mapTileList = new List<List<MapTile>>();
         // prepopulate the list
-        for (int i = 0; i < sizeX; ++i)
-        {
+        for (int i = 0; i < sizeX; ++i) {
             mapTileList.Add(new List<MapTile>());
             for (int j = 0; j < sizeY; ++j) {
-                mapTileList[i].Add(new MapTile());
+                mapTileList[i].Add(null);
             }
         }
         GenerateMap();
