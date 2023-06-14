@@ -9,6 +9,7 @@ public class Minion : MonoBehaviour
     public Vector2 endPosition;
     MapGenerator mapGenerator;
     Rigidbody2D m_Rigidbody;
+    Pathfinding2D pathfinder;
 
     public enum Intent {
         Idle,
@@ -26,6 +27,10 @@ public class Minion : MonoBehaviour
     {
         mapGenerator = FindObjectOfType<MapGenerator>();
         m_Rigidbody = GetComponent<Rigidbody2D>();
+        pathfinder = FindObjectOfType<MinionParent>().GetComponent<Pathfinding2D>();
+        Debug.Log("minion calling FindPath");
+        pathfinder.FindPath(transform.position, endPosition);
+        Debug.Log(pathfinder.path.ToArray());
     }
 
     void FixedUpdate()
@@ -48,6 +53,7 @@ public class Minion : MonoBehaviour
             isMoving = false;
             Vector2Int gridPosition = mapGenerator.pixelToGrid(endPosition.x, endPosition.y);
             Debug.Log("grid position from minion: " + gridPosition);
+            Debug.Log(mapGenerator);
             MapTile targetTile = mapGenerator.mapTileList[gridPosition.x][gridPosition.y];
             Debug.Log("grid position from target tile: " + targetTile.gridPosition);
             if (intent == Intent.Attacking) {

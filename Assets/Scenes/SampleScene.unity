@@ -1758,6 +1758,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1019643665}
   - component: {fileID: 1019643664}
+  - component: {fileID: 1019643666}
   m_Layer: 0
   m_Name: MinionParent
   m_TagString: Untagged
@@ -1777,13 +1778,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a0db8574d638fd4caa9cb8fba0f15d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dragging: {fileID: 0}
+  startTransform: {fileID: 0}
   offset: {x: 0, y: 0, z: 0}
   movableLayers:
     serializedVersion: 2
     m_Bits: 512
   playerMinion: {fileID: 2118774340}
   enemyMinion: {fileID: 127628227379729224, guid: ac24e5b8741266d4da6d44020ea3257c, type: 3}
+  mouseArrow: {fileID: 5739876162924184278, guid: d5a2d0c07d645d64885ac2d2e7e68fcd, type: 3}
+  activeArrow: {fileID: 0}
+  isActiveArrow: 0
+  tailPosition: {x: 0, y: 0}
+  defaultArrowWidth: 0
+  defaultArrowLength: 0
 --- !u!4 &1019643665
 Transform:
   m_ObjectHideFlags: 0
@@ -1799,6 +1806,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 16
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1019643666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1019643663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68b9faab059dfec4995f85863eab44a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MapGenerator: {fileID: 1990707146}
 --- !u!1001 &1068005362
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25765,6 +25785,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isMoving: 0
   endPosition: {x: 0, y: 0}
+  owner: 2
+  intent: 0
 --- !u!50 &2118774345
 Rigidbody2D:
   serializedVersion: 4

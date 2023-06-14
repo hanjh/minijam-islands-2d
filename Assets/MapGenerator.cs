@@ -18,6 +18,7 @@ public class MapGenerator : MonoBehaviour
     public Vector2 defaultTileSize;
 
     public List<List<MapTile>> mapTileList;
+    public Node2D[,] Grid;
     public static int sizeX = 16;
     public static int sizeY = 16;
 
@@ -117,6 +118,12 @@ public class MapGenerator : MonoBehaviour
         return new Vector2Int((int)Math.Round(i), (int)Math.Round(j));
     }
 
+    public Node2D NodeFromPixel(Vector3 worldPosition)
+    {
+        Vector2Int gridPos = pixelToGrid(worldPosition.x, worldPosition.y);
+        return Grid[gridPos.x, gridPos.y];
+    }
+
     bool isPlayerTile(int i, int j) {
         int playerI = playerIndex / sizeX;
         int playerJ = playerIndex % sizeX;
@@ -130,11 +137,13 @@ public class MapGenerator : MonoBehaviour
     }
 
     public void GenerateMap() {
+        Grid = new Node2D[sizeX, sizeY];
         // generate the tiles from right to left due to overlapping
         for (int i = 0; i < sizeX; ++i) {
             for (int j = sizeY - 1; j >= 0; --j) {
                 Vector2 tileOffsets = gridToPixel(i, j);
                 MapTile currentTile = defaultTile;
+                Grid[i, j] = new Node2D(false, gridToPixel(i, j), i, j);
                 if (isPlayerTile(i, j)) {
                     currentTile = playerTile;
                 } else if (isOpponentTile(i, j)) {
@@ -143,6 +152,7 @@ public class MapGenerator : MonoBehaviour
                     currentTile = defaultTile;
                 } else {
                     currentTile = waterTile;
+                    Grid[i, j].SetObstacle(true);
                 }
                 MapTile newTile = Instantiate(currentTile,
                         new Vector3(tileOffsets.x, tileOffsets.y, 0), Quaternion.identity);
@@ -153,8 +163,31 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-// Start is called before the first frame update
-void Start() {
+    public List<Node2D> GetNeighbors(Node2D node)
+    {
+        List<Node2D> neighbors = new List<Node2D>();
+
+        //checks and adds top neighbor
+        if (node.GridX >= 0 && node.GridX < sizeX && node.GridY + 1 >= 0 && node.GridY + 1 < sizeY)
+            neighbors.Add(Grid[node.GridX, node.GridY + 1]);
+
+        //checks and adds bottom neighbor
+        if (node.GridX >= 0 && node.GridX < sizeX && node.GridY - 1 >= 0 && node.GridY - 1 < sizeY)
+            neighbors.Add(Grid[node.GridX, node.GridY - 1]);
+
+        //checks and adds right neighbor
+        if (node.GridX + 1 >= 0 && node.GridX + 1 < sizeX && node.GridY >= 0 && node.GridY < sizeY)
+            neighbors.Add(Grid[node.GridX + 1, node.GridY]);
+
+        //checks and adds left neighbor
+        if (node.GridX - 1 >= 0 && node.GridX - 1 < sizeX && node.GridY >= 0 && node.GridY < sizeY)
+            neighbors.Add(Grid[node.GridX - 1, node.GridY]);
+
+        return neighbors;
+    }
+
+    // Start is called before the first frame update
+    void Start() {
         GenerateLandTiles();
         defaultTileSize = defaultTile.GetComponent<SpriteRenderer>().bounds.size;
         List<List<(int, int)>> islands = FindIslands();
